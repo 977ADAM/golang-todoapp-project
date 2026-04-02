@@ -1,4 +1,4 @@
-package corehttputils
+package corehttprequest
 
 import (
 	"fmt"
@@ -8,11 +8,10 @@ import (
 	coreerrors "github.com/977ADAM/golang-todoapp-project/internal/core/errors"
 )
 
-
 func GetIntQueryParam(r *http.Request, key string) (*int, error) {
 	param := r.URL.Query().Get(key)
 	if param == "" {
-		return nil, nil 
+		return nil, nil
 	}
 
 	val, err := strconv.Atoi(param)

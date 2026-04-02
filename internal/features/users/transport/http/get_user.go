@@ -4,10 +4,9 @@ import (
 	"net/http"
 
 	corelogger "github.com/977ADAM/golang-todoapp-project/internal/core/logger"
+	corehttprequest "github.com/977ADAM/golang-todoapp-project/internal/core/transport/http/request"
 	corehttpresponse "github.com/977ADAM/golang-todoapp-project/internal/core/transport/http/response"
-	corehttputils "github.com/977ADAM/golang-todoapp-project/internal/core/transport/http/utils"
 )
-
 
 type GetUserResponse UserDTOResponse
 
@@ -17,7 +16,7 @@ func (h *UsersHTTPHandler) GetUser(rw http.ResponseWriter, r *http.Request) {
 
 	responseHandler := corehttpresponse.NewHTTPResponseHandler(log, rw)
 
-	userID, err := corehttputils.GetIntPathValue(r, "id")
+	userID, err := corehttprequest.GetIntPathValue(r, "id")
 
 	if err != nil {
 		responseHandler.ErrorResponse(

@@ -10,7 +10,6 @@ import (
 	corehttprequest "github.com/977ADAM/golang-todoapp-project/internal/core/transport/http/request"
 	corehttpresponse "github.com/977ADAM/golang-todoapp-project/internal/core/transport/http/response"
 	corehttptypes "github.com/977ADAM/golang-todoapp-project/internal/core/transport/http/types"
-	corehttputils "github.com/977ADAM/golang-todoapp-project/internal/core/transport/http/utils"
 )
 
 type PatchUserRequest struct {
@@ -54,7 +53,7 @@ func (h *UsersHTTPHandler) PatchUser(rw http.ResponseWriter, r *http.Request) {
 	log := corelogger.FromContext(ctx)
 	responseHandler := corehttpresponse.NewHTTPResponseHandler(log, rw)
 
-	userID, err := corehttputils.GetIntPathValue(r, "id")
+	userID, err := corehttprequest.GetIntPathValue(r, "id")
 
 	if err != nil {
 		responseHandler.ErrorResponse(
@@ -93,8 +92,8 @@ func (h *UsersHTTPHandler) PatchUser(rw http.ResponseWriter, r *http.Request) {
 }
 
 func userPatchFromRequest(request PatchUserRequest) domain.UserPatch {
-	return domain.UserPatch{
-		FullName:    request.FullName.ToDomain(),
-		PhoneNumber: request.PhoneNumber.ToDomain(),
-	}
+	return domain.NewUserPatch(
+		request.FullName.ToDomain(),
+		request.PhoneNumber.ToDomain(),
+	)
 }

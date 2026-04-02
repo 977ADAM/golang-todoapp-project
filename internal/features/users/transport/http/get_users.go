@@ -5,12 +5,11 @@ import (
 	"net/http"
 
 	corelogger "github.com/977ADAM/golang-todoapp-project/internal/core/logger"
+	corehttprequest "github.com/977ADAM/golang-todoapp-project/internal/core/transport/http/request"
 	corehttpresponse "github.com/977ADAM/golang-todoapp-project/internal/core/transport/http/response"
-	corehttputils "github.com/977ADAM/golang-todoapp-project/internal/core/transport/http/utils"
 )
 
 type GetUsersResponce []UserDTOResponse
-
 
 func (h *UsersHTTPHandler) GetUsers(rw http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
@@ -35,18 +34,22 @@ func (h *UsersHTTPHandler) GetUsers(rw http.ResponseWriter, r *http.Request) {
 		)
 	}
 
-
 	response := GetUsersResponce(usersDTOFromDomains(userDomains))
 	responseHandler.JSONResponse(response, http.StatusOK)
 }
 
 func getLimitOffsetQueryParams(r *http.Request) (*int, *int, error) {
-	limit, err := corehttputils.GetIntQueryParam(r, "limit")
+	const (
+		limitQueryParamKey  = "limit"
+		offsetQueryParamKey = "offset"
+	)
+
+	limit, err := corehttprequest.GetIntQueryParam(r, limitQueryParamKey)
 	if err != nil {
 		return nil, nil, fmt.Errorf("get 'limit' query param: %w", err)
 	}
 
-	offset, err := corehttputils.GetIntQueryParam(r, "offset")
+	offset, err := corehttprequest.GetIntQueryParam(r, offsetQueryParamKey)
 	if err != nil {
 		return nil, nil, fmt.Errorf("get 'offset' query param: %w", err)
 	}

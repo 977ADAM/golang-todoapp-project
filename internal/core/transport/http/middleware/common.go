@@ -1,7 +1,6 @@
 package corehttpmiddleware
 
 import (
-	"context"
 	"net/http"
 	"time"
 
@@ -14,7 +13,7 @@ import (
 const requestIDHeader = "X-Request-ID"
 
 func RequestID() Middleware {
-	return func(next http.Handler) http.Handler  {
+	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			requestID := r.Header.Get(requestIDHeader)
 			if requestID == "" {
@@ -29,7 +28,6 @@ func RequestID() Middleware {
 	}
 }
 
-
 func Logger(log *corelogger.Logger) Middleware {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -40,32 +38,9 @@ func Logger(log *corelogger.Logger) Middleware {
 				zap.String("url", r.URL.String()),
 			)
 
-			ctx := context.WithValue(r.Context(), "log", l)
+			ctx := corelogger.ToContext(r.Context(), l)
 
 			next.ServeHTTP(w, r.WithContext(ctx))
-		})
-	}
-}
-
-func Panic() Middleware {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			ctx := r.Context()
-			log := corelogger.FromContext(ctx)
-			responseHandler := corehttpresponse.NewHTTPResponseHandler(log, w)
-
-
-			defer func() {
-				if p := recover(); p != nil {
-					responseHandler.PanicRespose(
-						p,
-						"during handle HTTP request got unexpected panic",
-					)
-				}
-			}()
-
-
-			next.ServeHTTP(w, r)
 		})
 	}
 }
@@ -83,14 +58,35 @@ func Trace() Middleware {
 				zap.String("http_method", r.Method),
 				zap.Time("time", before.UTC()),
 			)
-			
+
 			next.ServeHTTP(rw, r)
 
 			log.Debug(
 				"<<< done HTTP request",
-				zap.Int("status_code", rw.GetStatusCodeOrPanic()),
+				zap.Int("status_code", rw.GetStatusCode()),
 				zap.Duration("latency", time.Since(before)),
 			)
 		})
 	}
-} 
+}
+
+func Panic() Middleware {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			ctx := r.Context()
+			log := corelogger.FromContext(ctx)
+			responseHandler := corehttpresponse.NewHTTPResponseHandler(log, w)
+
+			defer func() {
+				if p := recover(); p != nil {
+					responseHandler.PanicRespose(
+						p,
+						"during handle HTTP request got unexpected panic",
+					)
+				}
+			}()
+
+			next.ServeHTTP(w, r)
+		})
+	}
+}

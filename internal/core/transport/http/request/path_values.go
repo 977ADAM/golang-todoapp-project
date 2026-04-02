@@ -1,4 +1,4 @@
-package corehttputils
+package corehttprequest
 
 import (
 	"fmt"
@@ -14,7 +14,6 @@ GET /users/{id}
 
 */
 
-
 func GetIntPathValue(r *http.Request, key string) (int, error) {
 	pathValue := r.PathValue(key)
 	if pathValue == "" {
@@ -28,7 +27,7 @@ func GetIntPathValue(r *http.Request, key string) (int, error) {
 	val, err := strconv.Atoi(pathValue)
 	if err != nil {
 		return 0, fmt.Errorf(
-			"path value='%s' by key='%s' not a valid interger: %v: %w",
+			"path value='%s' by key='%s' not a valid integer: %v: %w",
 			pathValue,
 			key,
 			err,

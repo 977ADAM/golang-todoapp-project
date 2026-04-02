@@ -8,7 +8,7 @@ import (
 	"syscall"
 
 	corelogger "github.com/977ADAM/golang-todoapp-project/internal/core/logger"
-	corepostgrespool "github.com/977ADAM/golang-todoapp-project/internal/core/repository/postgres/pool"
+	corepgxpool "github.com/977ADAM/golang-todoapp-project/internal/core/repository/postgres/pool/pgx"
 	corehttpmiddleware "github.com/977ADAM/golang-todoapp-project/internal/core/transport/http/middleware"
 	corehttpserver "github.com/977ADAM/golang-todoapp-project/internal/core/transport/http/server"
 	userspostgresrepository "github.com/977ADAM/golang-todoapp-project/internal/features/users/repository/postgres"
@@ -32,9 +32,9 @@ func main() {
 	defer logger.Close()
 
 	logger.Debug("initializing postgres connection pool")
-	pool, err := corepostgrespool.NewConnectionPool(
+	pool, err := corepgxpool.NewPool(
 		ctx,
-		corepostgrespool.NewConfigMust(),
+		corepgxpool.NewConfigMust(),
 	)
 	if err != nil {
 		logger.Fatal("failed to init postgres connection pool", zap.Error(err))
@@ -53,15 +53,23 @@ func main() {
 		logger,
 		corehttpmiddleware.RequestID(),
 		corehttpmiddleware.Logger(logger),
-		corehttpmiddleware.Panic(),
 		corehttpmiddleware.Trace(),
-
+		corehttpmiddleware.Panic(),
 	)
 
-	apiVersionRouter := corehttpserver.NewAPIVersionRouter(corehttpserver.ApiVersion1)
-	apiVersionRouter.RegisterRoutes(usersTransportHTTP.Routes()...)
+	apiVersionRouterV1 := corehttpserver.NewAPIVersionRouter(corehttpserver.ApiVersion1)
+	apiVersionRouterV1.RegisterRoutes(usersTransportHTTP.Routes()...)
 
-	httpServer.RegisterAPIRoutes(apiVersionRouter)
+	// apiVersionRouterV2 := corehttpserver.NewAPIVersionRouter(
+	// 	corehttpserver.ApiVersion2,
+	// 	corehttpmiddleware.Dummy("API v2 middleware"),
+	// )
+	// apiVersionRouterV2.RegisterRoutes(usersTransportHTTP.Routes()...)
+
+	httpServer.RegisterAPIRoutes(
+		apiVersionRouterV1,
+		// apiVersionRouterV2,
+	)
 
 	if err := httpServer.Run(ctx); err != nil {
 		logger.Error("HTTP server tun error", zap.Error(err))
