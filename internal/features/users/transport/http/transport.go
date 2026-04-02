@@ -1,0 +1,78 @@
+package userstransporthttp
+
+import (
+	"context"
+	"net/http"
+
+	"github.com/977ADAM/golang-todoapp-project/internal/core/domain"
+	corehttpserver "github.com/977ADAM/golang-todoapp-project/internal/core/transport/http/server"
+)
+
+type UsersHTTPHandler struct {
+	usersService UsersService
+}
+
+type UsersService interface {
+	CreateUser(
+		ctx context.Context,
+		user domain.User,
+	) (domain.User, error)
+	GetUsers(
+		ctx context.Context,
+		limit *int,
+		offset *int,
+	) ([]domain.User, error)
+	GetUser(
+		ctx context.Context,
+		id int,
+	) (domain.User, error)
+	DeleteUser(
+		ctx context.Context,
+		id int,
+	) error
+
+	PatchUser(
+		ctx context.Context,
+		id int,
+		patch domain.UserPatch,
+	) (domain.User, error)
+}
+
+func NewUsersHTTPHandler(usersService UsersService) *UsersHTTPHandler {
+	return &UsersHTTPHandler{
+		usersService: usersService,
+	}
+}
+
+func (h *UsersHTTPHandler) Routes() []corehttpserver.Route {
+	return []corehttpserver.Route{
+		{
+			Method:  http.MethodPost,
+			Path:    "/users",
+			Handler: h.CreateUser,
+		},
+		{
+			Method:  http.MethodGet,
+			Path:    "/users",
+			Handler: h.GetUsers,
+			// Middleware: []corehttpmiddleware.Middleware{
+			// 	corehttpmiddleware.Dummy("GetUsers"),
+			// },
+		},
+		{
+			Method:  http.MethodGet,
+			Path:    "/users/{id}",
+			Handler: h.GetUser,
+		},
+		{
+			Method:  http.MethodDelete,
+			Path:    "/users/{id}",
+			Handler: h.DeleteUser,
+		},
+		{
+			Method:  http.MethodPatch,
+			Path:    "/users/{id}",
+			Handler: h.PatchUser,
+		},
+	}
+}
