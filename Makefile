@@ -56,3 +56,13 @@ todoapp-run:
 	@export LOGGER_FOLDER=${PROJECT_ROOT}/out/logs && \
 	go mod tidy && \
 	go run ${PROJECT_ROOT}/cmd/todoapp/main.go
+
+
+logs-cleanup:
+	@read -p "Очистить все лог файлы? Опасночть утери данных. [y/N]: " ans; \
+	if [ "$$ans" = "y" ]; then \
+		rm -rf ${PROJECT_ROOT}/out/logs/* && \
+		echo "Лог файлы очищены"; \
+	else \
+		echo "Очистка лог файлов отменена"; \
+	fi
