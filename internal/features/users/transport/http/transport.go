@@ -30,7 +30,6 @@ type UsersService interface {
 		ctx context.Context,
 		id int,
 	) error
-
 	PatchUser(
 		ctx context.Context,
 		id int,

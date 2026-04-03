@@ -1,4 +1,4 @@
-package userspostgresrepository
+package taskspostgresrepository
 
 import (
 	"context"
@@ -10,16 +10,16 @@ import (
 	corepostgrespool "github.com/977ADAM/golang-todoapp-project/internal/core/repository/postgres/pool"
 )
 
-func (r *UsersRepository) GetUser(
+func (r *TasksRepository) GetTask(
 	ctx context.Context,
 	id int,
-) (domain.User, error) {
+) (domain.Task, error) {
 	ctx, cancel := context.WithTimeout(ctx, r.pool.OpTimeout())
 	defer cancel()
 
 	query := `
-	SELECT id, version, full_name, phone_number
-	FROM todoapp.users
+	SELECT id, version, title, description, completed, created_at, completed_at, author_user_id
+	FROM todoapp.tasks
 	WHERE id=$1;
 	`
 
@@ -29,27 +29,31 @@ func (r *UsersRepository) GetUser(
 		id,
 	)
 
-	var userModel UserModel
+	var taskModel TaskModel
 
 	err := row.Scan(
-		&userModel.ID,
-		&userModel.Version,
-		&userModel.FullName,
-		&userModel.PhoneNumber,
+		&taskModel.ID,
+		&taskModel.Version,
+		&taskModel.Title,
+		&taskModel.Description,
+		&taskModel.Completed,
+		&taskModel.CreatedAt,
+		&taskModel.CompletedAt,
+		&taskModel.AuthorUserID,
 	)
 	if err != nil {
 		if errors.Is(err, corepostgrespool.ErrNoRows) {
-			return domain.User{}, fmt.Errorf(
-				"user with id='%d': %w",
+			return domain.Task{}, fmt.Errorf(
+				"task with id='%d': %w",
 				id,
 				coreerrors.ErrNotFound,
 			)
 		}
 
-		return domain.User{}, fmt.Errorf("scan error: %w", err)
+		return domain.Task{}, fmt.Errorf("scan error: %w", err)
 	}
 
-	userDomain := userDomainFromModel(userModel)
+	taskDomain := taskDomainFromModel(taskModel)
 
-	return userDomain, nil
+	return taskDomain, nil
 }
