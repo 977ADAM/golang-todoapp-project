@@ -77,6 +77,20 @@ func NewTaskPatch(
 	}
 }
 
+func (t *Task) CompletionDuration() *time.Duration {
+	if !t.Completed {
+		return nil
+	}
+
+	if t.CompletedAt == nil {
+		return nil
+	}
+
+	duration := t.CompletedAt.Sub(t.CreatedAt)
+
+	return &duration
+}
+
 func (t *Task) Validate() error {
 	titleLen := len([]rune(t.Title))
 	if titleLen < 1 || titleLen > 100 {
@@ -124,8 +138,6 @@ func (t *Task) Validate() error {
 	return nil
 }
 
-
-
 func (p *TaskPatch) Validate() error {
 	if p.Title.Set && p.Title.Value == nil {
 		return fmt.Errorf("`Title` can't be patched to NULL: %w", coreerrors.ErrInvalidArgument)
@@ -148,7 +160,7 @@ func (t *Task) ApplyPatch(patch TaskPatch) error {
 	if patch.Description.Set {
 		tmp.Description = patch.Description.Value
 	}
-	
+
 	if patch.Completed.Set {
 		tmp.Completed = *patch.Completed.Value
 

@@ -13,6 +13,9 @@ import (
 	corepgxpool "github.com/977ADAM/golang-todoapp-project/internal/core/repository/postgres/pool/pgx"
 	corehttpmiddleware "github.com/977ADAM/golang-todoapp-project/internal/core/transport/http/middleware"
 	corehttpserver "github.com/977ADAM/golang-todoapp-project/internal/core/transport/http/server"
+	statisticspostgresrepository "github.com/977ADAM/golang-todoapp-project/internal/features/statistics/repository/postgres"
+	statisticsservice "github.com/977ADAM/golang-todoapp-project/internal/features/statistics/service"
+	statisticstransporthttp "github.com/977ADAM/golang-todoapp-project/internal/features/statistics/transport/http"
 	taskspostgresrepository "github.com/977ADAM/golang-todoapp-project/internal/features/tasks/repository/postgres"
 	tasksservice "github.com/977ADAM/golang-todoapp-project/internal/features/tasks/service"
 	taskstransporthttp "github.com/977ADAM/golang-todoapp-project/internal/features/tasks/transport/http"
@@ -62,6 +65,11 @@ func main() {
 	tasksService := tasksservice.NewTasksService(tasksRepository)
 	tasksTransportHTTP := taskstransporthttp.NewTasksHTTPHandler(tasksService)
 
+	logger.Debug("initializing feature", zap.String("feature", "statistics"))
+	statisticsRepository := statisticspostgresrepository.NewStatisticsRepository(pool)
+	statisticsService := statisticsservice.NewStatisticsService(statisticsRepository)
+	statisticsTransportHTTP := statisticstransporthttp.NewStatisticsHTTPHandler(statisticsService)
+
 	logger.Debug("initializing HTTP server")
 	httpServer := corehttpserver.NewHTTPServer(
 		corehttpserver.NewConfigMust(),
@@ -75,6 +83,7 @@ func main() {
 	apiVersionRouterV1 := corehttpserver.NewAPIVersionRouter(corehttpserver.ApiVersion1)
 	apiVersionRouterV1.RegisterRoutes(usersTransportHTTP.Routes()...)
 	apiVersionRouterV1.RegisterRoutes(tasksTransportHTTP.Routes()...)
+	apiVersionRouterV1.RegisterRoutes(statisticsTransportHTTP.Routes()...)
 
 	// apiVersionRouterV2 := corehttpserver.NewAPIVersionRouter(
 	// 	corehttpserver.ApiVersion2,
